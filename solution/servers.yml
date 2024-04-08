@@ -15,6 +15,11 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        -   IpProtocol: tcp
+            FromPort: 80
+            ToPort: 80
+            CidrIp: 0.0.0.0/0
 
   WebServerSecGroup:
     Type: AWS::EC2::SecurityGroup
@@ -26,7 +31,11 @@ Resources:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
-          SourceSecurityGroupId: !Ref LBSecGroup
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
         - IpProtocol: tcp
           FromPort: 0
@@ -41,9 +50,13 @@ Resources:
         UserData:
           Fn::Base64: !Sub |
             #!/bin/bash
-            sudo apt-get update -y
-            sudo apt-get install nginx -y
-            sudo service nginx start
+            sudo apt update -y
+            sudo apt install unzip awscli apache2 -y
+            sudo service apache2 start
+            cd /var/www/html
+            sudo aws s3 cp s3://udacity-high-avability-web-app/demo.zip .
+            sudo unzip -o demo.zip
+
         ImageId: ami-0557a15b87f6559cf
         SecurityGroupIds:
           - !Ref WebServerSecGroup
